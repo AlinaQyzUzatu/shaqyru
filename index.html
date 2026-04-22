@@ -754,15 +754,16 @@ var readingTime = [
 
 var userTouched = false;
 var autoTimer = null;
+var resumeTimer = null;
+var currentSection = 0;
 
 function scrollToSection(idx) {
   if (userTouched) return;
+  currentSection = idx;
   var panes = document.querySelectorAll('.pane');
-  // panes[0] = hero, content starts at panes[1]
   var contentIdx = idx + 1;
 
   if (contentIdx >= panes.length) {
-    // All sections viewed — pause, return to top, restart
     autoTimer = setTimeout(function() {
       if (userTouched) return;
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -776,19 +777,31 @@ function scrollToSection(idx) {
   window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
 
   var pause = readingTime[idx] !== undefined ? readingTime[idx] : 4000;
-  // 900ms for smooth scroll to settle + reading time
   autoTimer = setTimeout(function() { scrollToSection(idx + 1); }, 900 + pause);
 }
 
-function stopAutoScroll() {
+function onUserInteract() {
   userTouched = true;
   clearTimeout(autoTimer);
+  clearTimeout(resumeTimer);
+  resumeTimer = setTimeout(function() {
+    userTouched = false;
+    // Resume from the section closest to current scroll position
+    var panes = document.querySelectorAll('.pane');
+    var scrollY = window.scrollY;
+    var nearest = 0;
+    for (var i = 1; i < panes.length; i++) {
+      if (panes[i].offsetTop - 12 <= scrollY + window.innerHeight / 2) {
+        nearest = i - 1;
+      }
+    }
+    scrollToSection(nearest + 1);
+  }, 3000);
 }
 
-window.addEventListener('touchstart', stopAutoScroll, { passive: true });
-window.addEventListener('wheel',      stopAutoScroll, { passive: true });
+window.addEventListener('touchstart', onUserInteract, { passive: true });
+window.addEventListener('wheel',      onUserInteract, { passive: true });
 
-// Hero pause (4s) then begin section-by-section scroll
 autoTimer = setTimeout(function() { scrollToSection(0); }, 4000);
 
 // ── MUSIC PLAYER ──
