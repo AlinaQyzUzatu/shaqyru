@@ -744,12 +744,12 @@ function doSend(e){
 // ── AUTO SCROLL ──
 // Reading pause per content section AFTER scroll completes (ms)
 var readingTime = [
-  7000,  // Шақыру — invitation text, longest
-  4000,  // Date
-  4000,  // Countdown
-  3500,  // Calendar
-  5000,  // Venue + address
-  6000,  // Anketa form
+  12000, // Шақыру — invitation text, longest
+  6000,  // Date
+  6000,  // Countdown
+  5000,  // Calendar
+  7000,  // Venue + address
+  8000,  // Anketa form
 ];
 
 var userTouched = false;
@@ -757,24 +757,23 @@ var autoTimer   = null;
 var resumeTimer = null;
 var rafId       = null;
 
-// Custom eased scroll — takes ~1800ms, then fires callback
+// Velocity-based scroll: 220 px/sec, minimum 1.8s, maximum 5s
 function animateScrollTo(targetY, callback) {
   var startY    = window.scrollY;
-  var distance  = targetY - startY;
-  var duration  = 1800;
+  var distance  = Math.abs(targetY - startY);
+  var duration  = Math.min(Math.max(distance / 220 * 1000, 1800), 5000);
   var startTime = null;
 
   function ease(t) {
-    // ease-in-out cubic
     return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
   }
 
   function step(ts) {
-    if (userTouched) return;           // abort if user touched
+    if (userTouched) return;
     if (!startTime) startTime = ts;
     var elapsed  = ts - startTime;
     var progress = Math.min(elapsed / duration, 1);
-    window.scrollTo(0, startY + distance * ease(progress));
+    window.scrollTo(0, startY + (targetY - startY) * ease(progress));
     if (progress < 1) {
       rafId = requestAnimationFrame(step);
     } else if (callback) {
