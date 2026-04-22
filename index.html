@@ -742,50 +742,54 @@ function doSend(e){
 }
 
 // ── AUTO SCROLL ──
-var scrolling = false;
-var scrollInterval = null;
-var pauseTimer = null;
-var userScrolling = false;
-var userScrollTimer = null;
+// Reading pauses per section (ms): hero already visible, then each card
+var readingTime = [
+  5000,  // Шақыру (invite text — longer to read)
+  3500,  // Күні / Date
+  3500,  // Countdown
+  3000,  // Calendar
+  4500,  // Venue + address
+  5500,  // Anketa form
+];
 
-function startAutoScroll() {
-  if (scrollInterval) return;
-  scrollInterval = setInterval(function() {
-    if (userScrolling) return;
-    var maxScroll = document.body.scrollHeight - window.innerHeight;
-    if (window.scrollY >= maxScroll) {
-      // reached bottom — pause then scroll back to top
-      clearInterval(scrollInterval);
-      scrollInterval = null;
-      setTimeout(function() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(startAutoScroll, 3000);
-      }, 4000);
-      return;
-    }
-    window.scrollBy({ top: 1, behavior: 'auto' });
-  }, 30); // speed: 1px every 30ms = ~33px/sec — slow enough to read
+var userTouched = false;
+var autoTimer = null;
+
+function scrollToSection(idx) {
+  if (userTouched) return;
+  var panes = document.querySelectorAll('.pane');
+  // panes[0] = hero, content starts at panes[1]
+  var contentIdx = idx + 1;
+
+  if (contentIdx >= panes.length) {
+    // All sections viewed — pause, return to top, restart
+    autoTimer = setTimeout(function() {
+      if (userTouched) return;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      autoTimer = setTimeout(function() { scrollToSection(0); }, 3500);
+    }, 5000);
+    return;
+  }
+
+  var el = panes[contentIdx];
+  var targetTop = el.offsetTop - 12;
+  window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+
+  var pause = readingTime[idx] !== undefined ? readingTime[idx] : 4000;
+  // 900ms for smooth scroll to settle + reading time
+  autoTimer = setTimeout(function() { scrollToSection(idx + 1); }, 900 + pause);
 }
 
-// Pause auto-scroll when user manually scrolls
-window.addEventListener('touchstart', function() {
-  userScrolling = true;
-  clearTimeout(userScrollTimer);
-}, { passive: true });
+function stopAutoScroll() {
+  userTouched = true;
+  clearTimeout(autoTimer);
+}
 
-window.addEventListener('touchend', function() {
-  clearTimeout(userScrollTimer);
-  userScrollTimer = setTimeout(function() { userScrolling = false; }, 3000);
-}, { passive: true });
+window.addEventListener('touchstart', stopAutoScroll, { passive: true });
+window.addEventListener('wheel',      stopAutoScroll, { passive: true });
 
-window.addEventListener('wheel', function() {
-  userScrolling = true;
-  clearTimeout(userScrollTimer);
-  userScrollTimer = setTimeout(function() { userScrolling = false; }, 3000);
-}, { passive: true });
-
-// Start auto-scroll after 4 seconds
-setTimeout(startAutoScroll, 4000);
+// Hero pause (4s) then begin section-by-section scroll
+autoTimer = setTimeout(function() { scrollToSection(0); }, 4000);
 
 // ── MUSIC PLAYER ──
 var audio = null;
