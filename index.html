@@ -475,6 +475,33 @@ body {
   font-size:40px; color:#8c3a4e;
 }
 
+/* ════════════════════════════════
+   CONTENT SHEET
+════════════════════════════════ */
+#content-sheet {
+  position:relative;
+  z-index:2;
+  background:rgb(251,244,239);
+  border-radius:24px 24px 0 0;
+  margin-top:-32px;
+  box-shadow:0 -10px 40px rgba(30,8,15,0.25);
+  overflow:hidden;
+}
+#content-sheet .pane { padding:0; }
+#content-sheet .card,
+#content-sheet .card-dark {
+  background:transparent !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  border:none !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  border-bottom:0.5px solid rgba(201,160,96,0.25) !important;
+}
+#content-sheet .section {
+  max-width:600px;
+}
+
 /* spacing between full-width sections */
 .gap { height:4px; background:rgba(0,0,0,0.0); }
 
@@ -522,6 +549,8 @@ body {
     <div class="scroll-dot"></div>
   </div>
 </div>
+
+<div id="content-sheet">
 
 <!-- ══════════════ INVITE ══════════════ -->
 <div class="pane" style="padding:0 16px 0;">
@@ -665,6 +694,8 @@ body {
     <div class="ok-msg" id="ok">Рахмет!</div>
   </div>
 </div>
+
+</div><!-- end content-sheet -->
 
 <script>
 // ── BG SLIDESHOW ──
