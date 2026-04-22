@@ -831,8 +831,14 @@ function onUserInteract() {
 window.addEventListener('touchstart', onUserInteract, { passive: true });
 window.addEventListener('wheel',      onUserInteract, { passive: true });
 
-// Start: 5s on hero, then begin
-autoTimer = setTimeout(function() { scrollToSection(0); }, 5000);
+var autoScrollStarted = false;
+
+function startAutoScrollFromButton() {
+  if (autoScrollStarted) return;
+  autoScrollStarted = true;
+  // Smooth delay before first scroll so page feels calm at start
+  autoTimer = setTimeout(function() { scrollToSection(0); }, 2000);
+}
 
 // ── MUSIC PLAYER ──
 var audio = null;
@@ -855,6 +861,8 @@ function toggleMusic() {
     if (btn)  btn.style.background  = 'rgba(140,58,78,0.85)';
     if (icon) icon.textContent = '❚❚';
     if (ring) ring.style.animationPlayState = 'running';
+    // Start auto-scroll on first press of music button
+    startAutoScrollFromButton();
   }
 }
 
