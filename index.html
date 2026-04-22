@@ -755,27 +755,26 @@ var autoTimer   = null;
 var resumeTimer = null;
 var rafId       = null;
 
-// Velocity-based scroll: 220 px/sec, minimum 1.8s, maximum 5s
+// Sine ease-in-out: плавный равномерный переход без рывков
 function animateScrollTo(targetY, callback) {
-  var startY    = window.scrollY;
-  var distance  = Math.abs(targetY - startY);
-  var duration  = Math.min(Math.max(distance / 220 * 1000, 1800), 5000);
+  var startY   = window.scrollY;
+  var distance = Math.abs(targetY - startY);
+  // 280 px/sec, min 1000ms, max 3500ms
+  var duration = Math.min(Math.max(distance / 280 * 1000, 1000), 3500);
   var startTime = null;
-
-  function ease(t) {
-    return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
-  }
 
   function step(ts) {
     if (userTouched) return;
     if (!startTime) startTime = ts;
-    var elapsed  = ts - startTime;
-    var progress = Math.min(elapsed / duration, 1);
-    window.scrollTo(0, startY + (targetY - startY) * ease(progress));
-    if (progress < 1) {
+    var t = Math.min((ts - startTime) / duration, 1);
+    // Sine ease-in-out — гораздо мягче кубической
+    var eased = -(Math.cos(Math.PI * t) - 1) / 2;
+    window.scrollTo(0, startY + (targetY - startY) * eased);
+    if (t < 1) {
       rafId = requestAnimationFrame(step);
-    } else if (callback) {
-      callback();
+    } else {
+      // 200ms settle-пауза перед началом следующего действия
+      setTimeout(function() { if (callback) callback(); }, 200);
     }
   }
   rafId = requestAnimationFrame(step);
