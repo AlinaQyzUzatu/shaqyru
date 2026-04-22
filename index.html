@@ -742,56 +742,85 @@ function doSend(e){
 }
 
 // ── AUTO SCROLL ──
-// Reading pauses per section (ms): hero already visible, then each card
+// Reading pause per content section AFTER scroll completes (ms)
 var readingTime = [
-  5000,  // Шақыру (invite text — longer to read)
-  3500,  // Күні / Date
-  3500,  // Countdown
-  3000,  // Calendar
-  4500,  // Venue + address
-  5500,  // Anketa form
+  7000,  // Шақыру — invitation text, longest
+  4000,  // Date
+  4000,  // Countdown
+  3500,  // Calendar
+  5000,  // Venue + address
+  6000,  // Anketa form
 ];
 
 var userTouched = false;
-var autoTimer = null;
+var autoTimer   = null;
 var resumeTimer = null;
-var currentSection = 0;
+var rafId       = null;
+
+// Custom eased scroll — takes ~1800ms, then fires callback
+function animateScrollTo(targetY, callback) {
+  var startY    = window.scrollY;
+  var distance  = targetY - startY;
+  var duration  = 1800;
+  var startTime = null;
+
+  function ease(t) {
+    // ease-in-out cubic
+    return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+  }
+
+  function step(ts) {
+    if (userTouched) return;           // abort if user touched
+    if (!startTime) startTime = ts;
+    var elapsed  = ts - startTime;
+    var progress = Math.min(elapsed / duration, 1);
+    window.scrollTo(0, startY + distance * ease(progress));
+    if (progress < 1) {
+      rafId = requestAnimationFrame(step);
+    } else if (callback) {
+      callback();
+    }
+  }
+  rafId = requestAnimationFrame(step);
+}
 
 function scrollToSection(idx) {
   if (userTouched) return;
-  currentSection = idx;
-  var panes = document.querySelectorAll('.pane');
-  var contentIdx = idx + 1;
+  var panes      = document.querySelectorAll('.pane');
+  var contentIdx = idx + 1;           // panes[0] = hero
 
   if (contentIdx >= panes.length) {
+    // End of page — pause 5s, scroll back to top, then restart
     autoTimer = setTimeout(function() {
       if (userTouched) return;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      autoTimer = setTimeout(function() { scrollToSection(0); }, 3500);
+      animateScrollTo(0, function() {
+        autoTimer = setTimeout(function() { scrollToSection(0); }, 3000);
+      });
     }, 5000);
     return;
   }
 
-  var el = panes[contentIdx];
-  var targetTop = el.offsetTop - 12;
-  window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
-
-  var pause = readingTime[idx] !== undefined ? readingTime[idx] : 4000;
-  autoTimer = setTimeout(function() { scrollToSection(idx + 1); }, 900 + pause);
+  var targetTop = panes[contentIdx].offsetTop - 12;
+  animateScrollTo(Math.max(0, targetTop), function() {
+    // Scroll finished — now start reading pause
+    var pause = readingTime[idx] !== undefined ? readingTime[idx] : 4500;
+    autoTimer = setTimeout(function() { scrollToSection(idx + 1); }, pause);
+  });
 }
 
 function onUserInteract() {
   userTouched = true;
+  cancelAnimationFrame(rafId);
   clearTimeout(autoTimer);
   clearTimeout(resumeTimer);
   resumeTimer = setTimeout(function() {
     userTouched = false;
-    // Resume from the section closest to current scroll position
-    var panes = document.querySelectorAll('.pane');
+    // Find the section closest to current scroll position and resume from it
+    var panes  = document.querySelectorAll('.pane');
     var scrollY = window.scrollY;
     var nearest = 0;
     for (var i = 1; i < panes.length; i++) {
-      if (panes[i].offsetTop - 12 <= scrollY + window.innerHeight / 2) {
+      if (panes[i].offsetTop - 12 <= scrollY + window.innerHeight * 0.4) {
         nearest = i - 1;
       }
     }
@@ -802,7 +831,8 @@ function onUserInteract() {
 window.addEventListener('touchstart', onUserInteract, { passive: true });
 window.addEventListener('wheel',      onUserInteract, { passive: true });
 
-autoTimer = setTimeout(function() { scrollToSection(0); }, 4000);
+// Start: 5s on hero, then begin
+autoTimer = setTimeout(function() { scrollToSection(0); }, 5000);
 
 // ── MUSIC PLAYER ──
 var audio = null;
