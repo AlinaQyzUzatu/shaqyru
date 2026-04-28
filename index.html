@@ -767,8 +767,8 @@ function animateScrollTo(targetY, callback) {
     if (userTouched) return;
     if (!startTime) startTime = ts;
     var t = Math.min((ts - startTime) / duration, 1);
-    // Cubic ease-in-out: плавный разгон и мягкое торможение в конце
-    var eased = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+    // Quintic ease-out: быстрый старт, очень плавное замирание в конце
+    var eased = 1 - Math.pow(1 - t, 5);
     window.scrollTo(0, startY + (targetY - startY) * eased);
     if (t < 1) {
       rafId = requestAnimationFrame(step);
