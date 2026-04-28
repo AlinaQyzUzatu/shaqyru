@@ -759,21 +759,24 @@ function animateScrollTo(targetY, callback) {
   var startY   = window.scrollY;
   var distance = Math.abs(targetY - startY);
   if (distance < 2) { if (callback) callback(); return; }
-  // 55 px/sec — очень медленно, min 4s, max 12s
-  var duration = Math.min(Math.max(distance / 55 * 1000, 4000), 12000);
+  // 65 px/sec, min 3.5s, max 9s
+  var duration = Math.min(Math.max(distance / 65 * 1000, 3500), 9000);
   var startTime = null;
 
   function step(ts) {
     if (userTouched) return;
     if (!startTime) startTime = ts;
     var t = Math.min((ts - startTime) / duration, 1);
-    // Quintic ease-out: быстрый старт, очень плавное замирание в конце
+    // Quintic ease-out: плавное замирание
     var eased = 1 - Math.pow(1 - t, 5);
-    window.scrollTo(0, startY + (targetY - startY) * eased);
-    if (t < 1) {
+    var newY = Math.round(startY + (targetY - startY) * eased);
+    window.scrollTo(0, newY);
+    // Запускаем callback как только страница в пределах 3px от цели
+    if (t < 1 && Math.abs(newY - targetY) > 3) {
       rafId = requestAnimationFrame(step);
-    } else if (callback) {
-      callback();
+    } else {
+      window.scrollTo(0, targetY);
+      if (callback) callback();
     }
   }
   rafId = requestAnimationFrame(step);
