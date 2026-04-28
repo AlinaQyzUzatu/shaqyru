@@ -771,21 +771,31 @@ function toggleMusic() {
 
 window.addEventListener('load', function() {
   audio = document.getElementById('bg-audio');
-  if (audio) {
-    audio.volume = 0.4;
-    var playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.then(function() {
+  if (!audio) return;
+  audio.volume = 0.4;
+
+  function tryPlay() {
+    if (musicPlaying) return;
+    var p = audio.play();
+    if (p !== undefined) {
+      p.then(function() {
         musicPlaying = true;
         var btn  = document.getElementById('music-btn');
         var icon = document.getElementById('music-icon');
+        var ring = document.getElementById('music-ring');
         if (btn)  btn.style.background = 'rgba(140,58,78,0.85)';
         if (icon) icon.textContent = '❚❚';
-      }).catch(function() {
-        musicPlaying = false;
-      });
+        if (ring) ring.style.animationPlayState = 'running';
+      }).catch(function() {});
     }
   }
+
+  // Desktop: попытка сразу
+  tryPlay();
+
+  // iOS: запуск на первом касании (до того как пользователь что-то увидит)
+  document.addEventListener('touchstart', tryPlay, { once: true });
+  document.addEventListener('click',      tryPlay, { once: true });
 });
 </script>
 
