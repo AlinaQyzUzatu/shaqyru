@@ -759,8 +759,8 @@ function animateScrollTo(targetY, callback) {
   var startY   = window.scrollY;
   var distance = Math.abs(targetY - startY);
   if (distance < 2) { if (callback) callback(); return; }
-  // 75 px/sec — очень медленно, min 3s, max 9s
-  var duration = Math.min(Math.max(distance / 75 * 1000, 3000), 9000);
+  // 55 px/sec — очень медленно, min 4s, max 12s
+  var duration = Math.min(Math.max(distance / 55 * 1000, 4000), 12000);
   var startTime = null;
 
   function step(ts) {
@@ -819,7 +819,7 @@ function onUserInteract() {
         nearest = i - 1;
       }
     }
-    scrollToSection(nearest + 1);
+    scrollToSection(nearest);
   }, 3000);
 }
 
