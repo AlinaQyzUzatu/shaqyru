@@ -160,9 +160,9 @@ body {
 }
 .scroll-hint span {
   font-family:'Cormorant Garamond', serif;
-  font-size:9px; letter-spacing:4px;
-  color:rgba(255,255,255,0.35);
-  text-transform:uppercase;
+  font-size:13px; letter-spacing:3px;
+  color:rgba(255,255,255,0.7);
+  font-weight:300;
 }
 .scroll-dot {
   width:1px; height:36px;
@@ -519,6 +519,7 @@ body {
   <div class="hero-divider"></div>
   <div class="hero-date">01 · 08 · 2026</div>
   <div class="scroll-hint">
+    <span>Төмен жылжыңыз</span>
     <div class="scroll-dot"></div>
   </div>
 </div>
@@ -739,105 +740,6 @@ function doSend(e){
   return false;
 }
 
-// ── AUTO SCROLL ──
-// Reading pause per content section AFTER scroll completes (ms)
-var readingTime = [
-  22000, // Шақыру — invitation text, longest
-  6000,  // Date
-  6000,  // Countdown
-  5000,  // Calendar
-  7000,  // Venue + address
-  8000,  // Anketa form
-];
-
-var userTouched = false;
-var autoTimer   = null;
-var resumeTimer = null;
-var rafId       = null;
-
-function animateScrollTo(targetY, callback) {
-  var startY   = window.scrollY;
-  var distance = Math.abs(targetY - startY);
-  if (distance < 2) { if (callback) callback(); return; }
-  // 65 px/sec, min 3.5s, max 9s
-  var duration = Math.min(Math.max(distance / 65 * 1000, 3500), 9000);
-  var startTime = null;
-
-  function step(ts) {
-    if (userTouched) return;
-    if (!startTime) startTime = ts;
-    var t = Math.min((ts - startTime) / duration, 1);
-    // Quintic ease-out: плавное замирание
-    var eased = 1 - Math.pow(1 - t, 5);
-    var newY = Math.round(startY + (targetY - startY) * eased);
-    window.scrollTo(0, newY);
-    // Запускаем callback как только страница в пределах 3px от цели
-    if (t < 1 && Math.abs(newY - targetY) > 3) {
-      rafId = requestAnimationFrame(step);
-    } else {
-      window.scrollTo(0, targetY);
-      if (callback) callback();
-    }
-  }
-  rafId = requestAnimationFrame(step);
-}
-
-function scrollToSection(idx) {
-  if (userTouched) return;
-  var panes      = document.querySelectorAll('.pane');
-  var contentIdx = idx + 1;           // panes[0] = hero
-
-  if (contentIdx >= panes.length) {
-    // End of page — pause 5s, scroll back to top, then restart
-    autoTimer = setTimeout(function() {
-      if (userTouched) return;
-      animateScrollTo(0, function() {
-        autoTimer = setTimeout(function() { scrollToSection(0); }, 3000);
-      });
-    }, 5000);
-    return;
-  }
-
-  var targetTop = panes[contentIdx].offsetTop - 12;
-  animateScrollTo(Math.max(0, targetTop), function() {
-    // Scroll finished — now start reading pause
-    var pause = readingTime[idx] !== undefined ? readingTime[idx] : 4500;
-    autoTimer = setTimeout(function() { scrollToSection(idx + 1); }, pause);
-  });
-}
-
-function onUserInteract() {
-  userTouched = true;
-  cancelAnimationFrame(rafId);
-  clearTimeout(autoTimer);
-  clearTimeout(resumeTimer);
-  resumeTimer = setTimeout(function() {
-    userTouched = false;
-    // Find the section closest to current scroll position and resume from it
-    var panes  = document.querySelectorAll('.pane');
-    var scrollY = window.scrollY;
-    var nearest = 0;
-    for (var i = 1; i < panes.length; i++) {
-      if (panes[i].offsetTop - 12 <= scrollY + window.innerHeight * 0.4) {
-        nearest = i - 1;
-      }
-    }
-    scrollToSection(nearest + 1);
-  }, 3000);
-}
-
-window.addEventListener('touchstart', onUserInteract, { passive: true });
-window.addEventListener('wheel',      onUserInteract, { passive: true });
-
-var autoScrollStarted = false;
-
-function startAutoScrollFromButton() {
-  if (autoScrollStarted) return;
-  autoScrollStarted = true;
-  // Smooth delay before first scroll so page feels calm at start
-  autoTimer = setTimeout(function() { scrollToSection(0); }, 2000);
-}
-
 // ── MUSIC PLAYER ──
 var audio = null;
 var musicPlaying = false;
@@ -859,8 +761,6 @@ function toggleMusic() {
     if (btn)  btn.style.background  = 'rgba(140,58,78,0.85)';
     if (icon) icon.textContent = '❚❚';
     if (ring) ring.style.animationPlayState = 'running';
-    // Start auto-scroll on first press of music button
-    startAutoScrollFromButton();
   }
 }
 
