@@ -153,20 +153,26 @@ body {
 
 .scroll-hint {
   display:flex; flex-direction:column; align-items:center; gap:10px;
-  margin-top:32px;
+  margin-top:auto;
+  padding-bottom:40px;
   animation:fadeUp 1s 1s ease both;
 }
 .scroll-hint span {
   font-family:'Cormorant Garamond', serif;
-  font-size:clamp(17px, 3.8vw, 24px);
+  font-size:clamp(20px, 4.8vw, 30px);
   letter-spacing:4px;
   font-weight:300;
   color:rgba(255,220,150,1);
+  padding:12px 28px;
+  border:1.5px solid rgba(201,160,96,0.85);
+  border-radius:2px;
+  backdrop-filter:blur(6px);
+  background:rgba(0,0,0,0.15);
   animation:hint-glow 2.5s ease-in-out infinite;
 }
 @keyframes hint-glow {
-  0%,100% { text-shadow:0 0 8px rgba(201,160,96,0.8), 0 0 22px rgba(201,160,96,0.5), 0 0 44px rgba(201,160,96,0.2); }
-  50%      { text-shadow:0 0 14px rgba(255,220,130,1),  0 0 34px rgba(201,160,96,0.9), 0 0 70px rgba(201,160,96,0.5); }
+  0%,100% { text-shadow:0 0 8px rgba(201,160,96,0.8), 0 0 22px rgba(201,160,96,0.5), 0 0 44px rgba(201,160,96,0.2); box-shadow:0 0 8px rgba(201,160,96,0.25), inset 0 0 8px rgba(201,160,96,0.05); }
+  50%      { text-shadow:0 0 14px rgba(255,220,130,1),  0 0 34px rgba(201,160,96,0.9), 0 0 70px rgba(201,160,96,0.5); box-shadow:0 0 18px rgba(201,160,96,0.55), inset 0 0 14px rgba(201,160,96,0.12); }
 }
 .scroll-dot {
   width:1px; height:36px;
@@ -523,7 +529,7 @@ body {
   <div class="hero-divider"></div>
   <div class="hero-date">01 · 08 · 2026</div>
   <div class="scroll-hint">
-    <span>Төмен жылжыңыз</span>
+    <span>Төмен жылжытыңыз</span>
     <div class="scroll-dot"></div>
   </div>
 </div>
